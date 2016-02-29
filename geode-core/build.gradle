@@ -84,7 +84,8 @@ dependencies {
   compile 'org.springframework:spring-webmvc:' + project.'springframework.version'
   compile 'org.springframework.shell:spring-shell:' + project.'spring-shell.version'
   compile 'org.xerial.snappy:snappy-java:' + project.'snappy-java.version'
- 
+  compile 'org.apache.shiro:shiro-core:1.2.4'
+
   compile project(':geode-common')
   compile project(':geode-joptsimple')
   compile project(':geode-json')

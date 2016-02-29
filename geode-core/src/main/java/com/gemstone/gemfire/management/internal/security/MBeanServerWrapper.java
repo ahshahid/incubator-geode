@@ -18,6 +18,7 @@ package com.gemstone.gemfire.management.internal.security;
 
 import com.gemstone.gemfire.management.internal.ManagementConstants;
 import com.gemstone.gemfire.security.GemFireSecurityException;
+import org.apache.shiro.SecurityUtils;
 
 import javax.management.Attribute;
 import javax.management.AttributeList;
@@ -55,11 +56,8 @@ import java.util.Set;
  */
 public class MBeanServerWrapper implements MBeanServerForwarder {
   private MBeanServer mbs;
-  private ManagementInterceptor interceptor;
-
   
-  public MBeanServerWrapper(ManagementInterceptor interceptor){
-    this.interceptor = interceptor;
+  public MBeanServerWrapper(){
   }
 
   private void doAuthorization(ResourceOperationContext context){
@@ -67,14 +65,16 @@ public class MBeanServerWrapper implements MBeanServerForwarder {
     if(context == null)
       return;
 
-    interceptor.authorize(context);
+    //interceptor.authorize(context);
+    org.apache.shiro.subject.Subject currentUser = SecurityUtils.getSubject();
+    currentUser.checkPermission(context);
   }
 
   private void doAuthorizationPost(ResourceOperationContext context){
     if(context == null)
       return;
 
-    interceptor.postAuthorize(context);
+    //interceptor.postAuthorize(context);
   }
 
   private void checkDomain(ObjectName name){
@@ -395,10 +395,6 @@ public class MBeanServerWrapper implements MBeanServerForwarder {
   @Override
   public MBeanServer getMBeanServer() {    
     return mbs;
-  }
-
-  public ManagementInterceptor getInterceptor() {
-    return interceptor;
   }
 
   @Override

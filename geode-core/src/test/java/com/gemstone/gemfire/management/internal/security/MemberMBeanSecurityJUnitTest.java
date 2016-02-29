@@ -19,6 +19,7 @@ package com.gemstone.gemfire.management.internal.security;
 import com.gemstone.gemfire.internal.AvailablePort;
 import com.gemstone.gemfire.management.MemberMXBean;
 import com.gemstone.gemfire.test.junit.categories.IntegrationTest;
+import org.apache.shiro.ShiroException;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -66,7 +67,7 @@ public class MemberMBeanSecurityJUnitTest {
   @Test
   @JMXConnectionConfiguration(user = "stranger", password = "1234567")
   public void testNoAccess() throws Exception {
-    assertThatThrownBy(() -> bean.shutDownMember()).isInstanceOf(SecurityException.class).hasMessageContaining("MEMBER:SHUTDOWN");
+    assertThatThrownBy(() -> bean.shutDownMember()).isInstanceOf(ShiroException.class).hasMessageContaining("MEMBER:SHUTDOWN");
     assertThatThrownBy(() -> bean.createManager()).hasMessageContaining("MANAGER:CREATE");
     assertThatThrownBy(() -> bean.fetchJvmThreads()).hasMessageContaining("JMX:GET");
     assertThatThrownBy(() -> bean.getName()).hasMessageContaining("JMX:GET");

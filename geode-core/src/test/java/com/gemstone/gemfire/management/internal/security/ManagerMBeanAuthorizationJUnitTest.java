@@ -20,6 +20,7 @@ import com.gemstone.gemfire.internal.AvailablePort;
 import com.gemstone.gemfire.management.ManagerMXBean;
 import com.gemstone.gemfire.management.internal.beans.ManagerMBean;
 import com.gemstone.gemfire.test.junit.categories.IntegrationTest;
+import org.apache.shiro.ShiroException;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -70,13 +71,13 @@ public class ManagerMBeanAuthorizationJUnitTest {
   @Test
   @JMXConnectionConfiguration(user = "user", password = "1234567")
   public void testSomeAccess() throws Exception {
-    assertThatThrownBy(() -> managerMXBean.start()).isInstanceOf(SecurityException.class);
+    assertThatThrownBy(() -> managerMXBean.start()).isInstanceOf(ShiroException.class);
     managerMXBean.getPulseURL();
   }
 
   @Test
   @JMXConnectionConfiguration(user = "stranger", password = "1234567")
   public void testNoAccess() throws Exception {
-    assertThatThrownBy(() -> managerMXBean.start()).isInstanceOf(SecurityException.class);
+    assertThatThrownBy(() -> managerMXBean.start()).isInstanceOf(ShiroException.class);
   }
 }

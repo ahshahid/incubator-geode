@@ -19,6 +19,7 @@ package com.gemstone.gemfire.management.internal.security;
 import com.gemstone.gemfire.internal.AvailablePort;
 import com.gemstone.gemfire.management.CacheServerMXBean;
 import com.gemstone.gemfire.test.junit.categories.IntegrationTest;
+import org.apache.shiro.ShiroException;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -61,21 +62,21 @@ public class CacheServerMBeanAuthorizationJUnitTest {
   @Test
   @JMXConnectionConfiguration(user = "user", password = "1234567")
   public void testSomeAccess() throws Exception {
-    assertThatThrownBy(() -> bean.removeIndex("foo")).isInstanceOf(SecurityException.class);
-    assertThatThrownBy(() -> bean.executeContinuousQuery("bar")).isInstanceOf(SecurityException.class);
+    assertThatThrownBy(() -> bean.removeIndex("foo")).isInstanceOf(ShiroException.class);
+    assertThatThrownBy(() -> bean.executeContinuousQuery("bar")).isInstanceOf(ShiroException.class);
     bean.fetchLoadProbe();
   }
 
   @Test
   @JMXConnectionConfiguration(user = "stranger", password = "1234567")
   public void testNoAccess() throws Exception {
-    assertThatThrownBy(() -> bean.removeIndex("foo")).isInstanceOf(SecurityException.class).hasMessageContaining("INDEX:DESTROY");
-    assertThatThrownBy(() -> bean.executeContinuousQuery("bar")).isInstanceOf(SecurityException.class).hasMessageContaining("CONTINUOUS_QUERY:EXECUTE");
-    assertThatThrownBy(() -> bean.fetchLoadProbe()).isInstanceOf(SecurityException.class).hasMessageContaining("JMX:GET");
-    assertThatThrownBy(() -> bean.getActiveCQCount()).isInstanceOf(SecurityException.class).hasMessageContaining("JMX:GET");
-    assertThatThrownBy(() -> bean.stopContinuousQuery("bar")).isInstanceOf(SecurityException.class).hasMessageContaining("ONTINUOUS_QUERY:STOP");
-    assertThatThrownBy(() -> bean.closeAllContinuousQuery("bar")).isInstanceOf(SecurityException.class).hasMessageContaining("ONTINUOUS_QUERY:STOP");
-    assertThatThrownBy(() -> bean.isRunning()).isInstanceOf(SecurityException.class).hasMessageContaining("JMX:GET");
-    assertThatThrownBy(() -> bean.showClientQueueDetails("bar")).isInstanceOf(SecurityException.class).hasMessageContaining("JMX:GET");
+    assertThatThrownBy(() -> bean.removeIndex("foo")).isInstanceOf(ShiroException.class).hasMessageContaining("INDEX:DESTROY");
+    assertThatThrownBy(() -> bean.executeContinuousQuery("bar")).isInstanceOf(ShiroException.class).hasMessageContaining("CONTINUOUS_QUERY:EXECUTE");
+    assertThatThrownBy(() -> bean.fetchLoadProbe()).isInstanceOf(ShiroException.class).hasMessageContaining("JMX:GET");
+    assertThatThrownBy(() -> bean.getActiveCQCount()).isInstanceOf(ShiroException.class).hasMessageContaining("JMX:GET");
+    assertThatThrownBy(() -> bean.stopContinuousQuery("bar")).isInstanceOf(ShiroException.class).hasMessageContaining("ONTINUOUS_QUERY:STOP");
+    assertThatThrownBy(() -> bean.closeAllContinuousQuery("bar")).isInstanceOf(ShiroException.class).hasMessageContaining("ONTINUOUS_QUERY:STOP");
+    assertThatThrownBy(() -> bean.isRunning()).isInstanceOf(ShiroException.class).hasMessageContaining("JMX:GET");
+    assertThatThrownBy(() -> bean.showClientQueueDetails("bar")).isInstanceOf(ShiroException.class).hasMessageContaining("JMX:GET");
   }
 }

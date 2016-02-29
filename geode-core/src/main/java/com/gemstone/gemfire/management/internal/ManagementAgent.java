@@ -298,10 +298,6 @@ public class ManagementAgent {
     }
   }
 
-  private boolean isRunningInTomcat() {
-    return (System.getProperty("catalina.base") != null || System.getProperty("catalina.home") != null);
-  }
-
   private void setStatusMessage(ManagerMXBean mBean, String message) {
     mBean.setPulseURL("");
     mBean.setStatusMessage(message);
@@ -389,11 +385,22 @@ public class ManagementAgent {
     // Environment map. KIRK: why is this declared as HashMap?
     final HashMap<String, Object> env = new HashMap<String, Object>();
 
-    ManagementInterceptor securityInterceptor = null;
     Cache cache = CacheFactory.getAnyInstance();
-    if (isCustomAuthenticator()) {
-      securityInterceptor = new ManagementInterceptor(cache.getDistributedSystem().getProperties());
-      env.put(JMXConnectorServer.AUTHENTICATOR, securityInterceptor);
+    String shiroConfig = this.config.getShiroInit();
+
+    if (!StringUtils.isEmpty(shiroConfig)) {
+      Factory<SecurityManager> factory = new IniSecurityManagerFactory("classpath:"+shiroConfig);
+      SecurityManager securityManager = factory.getInstance();
+      SecurityUtils.setSecurityManager(securityManager);
+      // TODO: how do we use the security manager configured by the shiro.ini to do JMX authentication?
+    }
+    else if (isCustomAuthenticator()) {
+      Properties sysProps = cache.getDistributedSystem().getProperties();
+      Realm realm = new CustomAuthRealm(sysProps);
+      SecurityManager securityManager = new DefaultSecurityManager(realm);
+
+      SecurityUtils.setSecurityManager(securityManager);
+      env.put(JMXConnectorServer.AUTHENTICATOR, realm);
     }
     else {
       /* Disable the old authenticator mechanism */
@@ -466,11 +473,9 @@ public class ManagementAgent {
       }
     };
 
-    if (isCustomAuthorizer()) {
-      if(securityInterceptor==null){
-        securityInterceptor = new ManagementInterceptor(cache.getDistributedSystem().getProperties());
-      }
-      MBeanServerWrapper mBeanServerWrapper = new MBeanServerWrapper(securityInterceptor);
+    // use shiro for authentication when there is a shiro.ini configuration or custom authentication/authorization present
+    if (!StringUtils.isEmpty(shiroConfig) || (isCustomAuthenticator() &&  isCustomAuthorizer())) {
+      MBeanServerWrapper mBeanServerWrapper = new MBeanServerWrapper();
       cs.setMBeanServerForwarder(mBeanServerWrapper);
       logger.info("Starting RMI Connector with Security Interceptor");
     }

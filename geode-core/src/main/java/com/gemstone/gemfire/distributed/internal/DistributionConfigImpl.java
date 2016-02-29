@@ -390,6 +390,8 @@ public class DistributionConfigImpl
   
   /** Whether pages should be locked into memory or allowed to swap to disk */
   private boolean lockMemory = DEFAULT_LOCK_MEMORY;
+
+  private String shiroInit = "";
   
   //////////////////////  Constructors  //////////////////////
 
@@ -2269,6 +2271,16 @@ public class DistributionConfigImpl
   @Override
   public void setLockMemory(final boolean value) {
     this.lockMemory = value;
+  }
+
+  @Override
+  public void setShiroInit(String value) {
+    this.shiroInit = value;
+  }
+
+  @Override
+  public String getShiroInit() {
+    return this.shiroInit;
   }
 
   ///////////////////////  Utility Methods  ///////////////////////

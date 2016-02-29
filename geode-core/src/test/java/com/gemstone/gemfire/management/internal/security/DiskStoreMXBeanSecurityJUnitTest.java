@@ -19,6 +19,7 @@ package com.gemstone.gemfire.management.internal.security;
 import com.gemstone.gemfire.internal.AvailablePort;
 import com.gemstone.gemfire.management.DiskStoreMXBean;
 import com.gemstone.gemfire.test.junit.categories.IntegrationTest;
+import org.apache.shiro.ShiroException;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -69,7 +70,7 @@ public class DiskStoreMXBeanSecurityJUnitTest {
   @Test
   @JMXConnectionConfiguration(user = "stranger", password = "1234567")
   public void testNoAccess() throws Exception {
-    assertThatThrownBy(() -> bean.flush()).isInstanceOf(SecurityException.class).hasMessageContaining("DISKSTORE:FLUSH");
+    assertThatThrownBy(() -> bean.flush()).isInstanceOf(ShiroException.class).hasMessageContaining("DISKSTORE:FLUSH");
     assertThatThrownBy(() -> bean.forceCompaction()).hasMessageContaining("DISKSTORE:COMPACT");
     assertThatThrownBy(() -> bean.forceRoll()).hasMessageContaining("DISKSTORE:ROLL");
     assertThatThrownBy(() -> bean.getCompactionThreshold()).hasMessageContaining("JMX:GET");

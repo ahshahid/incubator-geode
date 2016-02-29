@@ -88,18 +88,18 @@ public class GatewaySenderMBeanSecurityTest {
   @Test
   @JMXConnectionConfiguration(user = "stranger", password = "1234567")
   public void testNoAccess() throws Exception {
-    assertThatThrownBy(() -> bean.getAlertThreshold()).hasMessageStartingWith("Access Denied: Not authorized for JMX:GET");
-    assertThatThrownBy(() -> bean.getAverageDistributionTimePerBatch()).hasMessageStartingWith("Access Denied: Not authorized for JMX:GET");
-    assertThatThrownBy(() -> bean.getBatchSize()).hasMessageStartingWith("Access Denied: Not authorized for JMX:GET");
-    assertThatThrownBy(() -> bean.getMaximumQueueMemory()).hasMessageStartingWith("Access Denied: Not authorized for JMX:GET");
-    assertThatThrownBy(() -> bean.getOrderPolicy()).hasMessageStartingWith("Access Denied: Not authorized for JMX:GET");
-    assertThatThrownBy(() -> bean.isBatchConflationEnabled()).hasMessageStartingWith("Access Denied: Not authorized for JMX:GET");
-    assertThatThrownBy(() -> bean.isManualStart()).hasMessageStartingWith("Access Denied: Not authorized for JMX:GET");
-    assertThatThrownBy(() -> bean.pause()).hasMessageStartingWith("Access Denied: Not authorized for GATEWAY_SENDER:PAUSE");
-    assertThatThrownBy(() -> bean.rebalance()).hasMessageStartingWith("Access Denied: Not authorized for GATEWAY_SENDER:REBALANCE");
-    assertThatThrownBy(() -> bean.resume()).hasMessageStartingWith("Access Denied: Not authorized for GATEWAY_SENDER:RESUME");
-    assertThatThrownBy(() -> bean.start()).hasMessageStartingWith("Access Denied: Not authorized for GATEWAY_SENDER:START");
-    assertThatThrownBy(() -> bean.stop()).hasMessageStartingWith("Access Denied: Not authorized for GATEWAY_SENDER:STOP");
+    assertThatThrownBy(() -> bean.getAlertThreshold()).hasMessageContaining("JMX:GET");
+    assertThatThrownBy(() -> bean.getAverageDistributionTimePerBatch()).hasMessageContaining("JMX:GET");
+    assertThatThrownBy(() -> bean.getBatchSize()).hasMessageContaining("MX:GET");
+    assertThatThrownBy(() -> bean.getMaximumQueueMemory()).hasMessageContaining("JMX:GET");
+    assertThatThrownBy(() -> bean.getOrderPolicy()).hasMessageContaining("JMX:GET");
+    assertThatThrownBy(() -> bean.isBatchConflationEnabled()).hasMessageContaining("JMX:GET");
+    assertThatThrownBy(() -> bean.isManualStart()).hasMessageContaining("JMX:GET");
+    assertThatThrownBy(() -> bean.pause()).hasMessageContaining("GATEWAY_SENDER:PAUSE");
+    assertThatThrownBy(() -> bean.rebalance()).hasMessageContaining("GATEWAY_SENDER:REBALANCE");
+    assertThatThrownBy(() -> bean.resume()).hasMessageContaining("GATEWAY_SENDER:RESUME");
+    assertThatThrownBy(() -> bean.start()).hasMessageContaining("GATEWAY_SENDER:START");
+    assertThatThrownBy(() -> bean.stop()).hasMessageContaining("GATEWAY_SENDER:STOP");
   }
 
 }

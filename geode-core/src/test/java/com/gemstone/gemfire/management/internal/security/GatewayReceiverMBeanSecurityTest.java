@@ -81,9 +81,9 @@ public class GatewayReceiverMBeanSecurityTest {
   @Test
   @JMXConnectionConfiguration(user = "stranger", password = "1234567")
   public void testNoAccess() throws Exception {
-    assertThatThrownBy(() -> bean.getTotalConnectionsTimedOut()).hasMessageStartingWith("Access Denied: Not authorized for JMX:GET");
-    assertThatThrownBy(() -> bean.start()).hasMessageStartingWith("Access Denied: Not authorized for GATEWAY_RECEIVER:START");
-    assertThatThrownBy(() -> bean.stop()).hasMessageStartingWith("Access Denied: Not authorized for GATEWAY_RECEIVER:STOP");
+    assertThatThrownBy(() -> bean.getTotalConnectionsTimedOut()).hasMessageContaining("JMX:GET");
+    assertThatThrownBy(() -> bean.start()).hasMessageContaining("GATEWAY_RECEIVER:START");
+    assertThatThrownBy(() -> bean.stop()).hasMessageContaining("GATEWAY_RECEIVER:STOP");
   }
 
 }

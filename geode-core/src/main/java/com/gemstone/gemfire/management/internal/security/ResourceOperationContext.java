@@ -17,11 +17,12 @@
 package com.gemstone.gemfire.management.internal.security;
 
 import com.gemstone.gemfire.cache.operations.OperationContext;
+import org.apache.shiro.authz.Permission;
 
 /**
  * This is base class for OperationContext for resource (JMX and CLI) operations
  */
-public class ResourceOperationContext extends OperationContext {
+public class ResourceOperationContext extends OperationContext implements Permission{
 
   private boolean isPostOperation = false;
   private Object opResult = null;
@@ -81,4 +82,16 @@ public class ResourceOperationContext extends OperationContext {
     return getResource() + ":"+ getOperationCode();
   }
 
+  public boolean equals(Object o){
+    if(! (o instanceof ResourceOperationContext))
+      return false;
+
+    ResourceOperationContext other = (ResourceOperationContext)o;
+    return (this.resource==other.getResource() && this.operation==other.getOperationCode());
+  }
+
+  @Override
+  public boolean implies(Permission p) {
+    return this.equals(p);
+  }
 }
