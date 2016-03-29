@@ -17,30 +17,6 @@
 
 package com.gemstone.gemfire.distributed.internal;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Reader;
-import java.lang.reflect.Array;
-import java.lang.reflect.Method;
-import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.StringTokenizer;
-import java.util.TreeSet;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-
-import org.apache.logging.log4j.Logger;
-
 import com.gemstone.gemfire.CancelCriterion;
 import com.gemstone.gemfire.CancelException;
 import com.gemstone.gemfire.ForcedDisconnectException;
@@ -94,6 +70,7 @@ import com.gemstone.gemfire.internal.cache.execute.FunctionStats;
 import com.gemstone.gemfire.internal.cache.tier.sockets.HandShake;
 import com.gemstone.gemfire.internal.cache.xmlcache.CacheServerCreation;
 import com.gemstone.gemfire.internal.i18n.LocalizedStrings;
+import com.gemstone.gemfire.internal.lang.StringUtils;
 import com.gemstone.gemfire.internal.logging.InternalLogWriter;
 import com.gemstone.gemfire.internal.logging.LogService;
 import com.gemstone.gemfire.internal.logging.LogWriterFactory;
@@ -108,7 +85,36 @@ import com.gemstone.gemfire.internal.tcp.ConnectionTable;
 import com.gemstone.gemfire.internal.util.concurrent.StoppableCondition;
 import com.gemstone.gemfire.internal.util.concurrent.StoppableReentrantLock;
 import com.gemstone.gemfire.management.ManagementException;
+import com.gemstone.gemfire.security.CustomAuthRealm;
 import com.gemstone.gemfire.security.GemFireSecurityException;
+import org.apache.logging.log4j.Logger;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.config.IniSecurityManagerFactory;
+import org.apache.shiro.mgt.DefaultSecurityManager;
+import org.apache.shiro.mgt.SecurityManager;
+import org.apache.shiro.realm.Realm;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.Reader;
+import java.lang.reflect.Array;
+import java.lang.reflect.Method;
+import java.net.InetAddress;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Properties;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.StringTokenizer;
+import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * The concrete implementation of {@link DistributedSystem} that
@@ -275,12 +281,27 @@ public class InternalDistributedSystem
     InternalDataSerializer.checkSerializationVersion();
     try {
       SystemFailure.startThreads();
-    InternalDistributedSystem newSystem = new InternalDistributedSystem(config);
-    newSystem.initialize();
-    reconnectAttemptCounter = 0; // reset reconnect count since we just got a new connection
-    notifyConnectListeners(newSystem);
-    success = true;
-    return newSystem;
+      InternalDistributedSystem newSystem = new InternalDistributedSystem(config);
+      newSystem.initialize();
+      reconnectAttemptCounter = 0; // reset reconnect count since we just got a new connection
+      notifyConnectListeners(newSystem);
+      success = true;
+
+      // setup shiro for authentication and authorization if it's desired
+      String shiroConfig = config.getProperty(DistributionConfig.SHIRO_INIT_NAME);
+      String customAuthenticator = config.getProperty(DistributionConfig.SECURITY_CLIENT_AUTHENTICATOR_NAME);
+      if (!StringUtils.isBlank(shiroConfig)) {
+        IniSecurityManagerFactory factory = new IniSecurityManagerFactory("classpath:"+shiroConfig);
+        SecurityManager securityManager = factory.getInstance();
+        SecurityUtils.setSecurityManager(securityManager);
+      }
+      else if (!StringUtils.isBlank(customAuthenticator)) {
+        Realm realm = new CustomAuthRealm(config);
+        DefaultSecurityManager securityManager = new DefaultSecurityManager(realm);
+        SecurityUtils.setSecurityManager(securityManager);
+      }
+
+      return newSystem;
     } finally {
       if (!success) {
         LoggingThreadGroup.cleanUpThreadGroups(); // bug44365 - logwriters accumulate, causing mem leak

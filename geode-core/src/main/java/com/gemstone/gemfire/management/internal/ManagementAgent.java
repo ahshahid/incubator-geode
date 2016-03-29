@@ -16,7 +16,6 @@
  */
 package com.gemstone.gemfire.management.internal;
 
-import com.gemstone.gemfire.cache.Cache;
 import com.gemstone.gemfire.cache.CacheFactory;
 import com.gemstone.gemfire.distributed.internal.DistributionConfig;
 import com.gemstone.gemfire.distributed.internal.DistributionManager;
@@ -30,8 +29,8 @@ import com.gemstone.gemfire.management.ManagementException;
 import com.gemstone.gemfire.management.ManagementService;
 import com.gemstone.gemfire.management.ManagerMXBean;
 import com.gemstone.gemfire.management.internal.security.MBeanServerWrapper;
-import com.gemstone.gemfire.management.internal.security.ManagementInterceptor;
 import com.gemstone.gemfire.management.internal.unsafe.ReadOpFileAccessController;
+import com.gemstone.gemfire.security.JMXShiroAuthenticator;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -81,6 +80,7 @@ public class ManagementAgent {
   private boolean running = false;
   private Registry registry;
   private JMXConnectorServer cs;
+  private JMXShiroAuthenticator shiroAuthenticator;
   private final DistributionConfig config;
   private boolean isHttpServiceRunning = false;
 
@@ -150,6 +150,10 @@ public class ManagementAgent {
       logger.debug("Stopping jmx manager agent");
     }
     try {
+      // log out the shiro user
+      if (shiroAuthenticator!=null) {
+        shiroAuthenticator.logout();
+      }
       cs.stop();
       UnicastRemoteObject.unexportObject(registry, true);
     } catch (IOException e) {
@@ -385,22 +389,10 @@ public class ManagementAgent {
     // Environment map. KIRK: why is this declared as HashMap?
     final HashMap<String, Object> env = new HashMap<String, Object>();
 
-    Cache cache = CacheFactory.getAnyInstance();
     String shiroConfig = this.config.getShiroInit();
-
-    if (!StringUtils.isEmpty(shiroConfig)) {
-      Factory<SecurityManager> factory = new IniSecurityManagerFactory("classpath:"+shiroConfig);
-      SecurityManager securityManager = factory.getInstance();
-      SecurityUtils.setSecurityManager(securityManager);
-      // TODO: how do we use the security manager configured by the shiro.ini to do JMX authentication?
-    }
-    else if (isCustomAuthenticator()) {
-      Properties sysProps = cache.getDistributedSystem().getProperties();
-      Realm realm = new CustomAuthRealm(sysProps);
-      SecurityManager securityManager = new DefaultSecurityManager(realm);
-
-      SecurityUtils.setSecurityManager(securityManager);
-      env.put(JMXConnectorServer.AUTHENTICATOR, realm);
+    if (! StringUtils.isEmpty(shiroConfig) || isCustomAuthenticator()) {
+      shiroAuthenticator = new JMXShiroAuthenticator();
+      env.put(JMXConnectorServer.AUTHENTICATOR, shiroAuthenticator);
     }
     else {
       /* Disable the old authenticator mechanism */

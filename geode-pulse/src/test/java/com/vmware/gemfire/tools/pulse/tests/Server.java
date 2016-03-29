@@ -71,7 +71,7 @@ public class Server {
       ManagementInterceptor interceptor = new ManagementInterceptor(props);
       env.put(JMXConnectorServer.AUTHENTICATOR, interceptor);
       cs = JMXConnectorServerFactory.newJMXConnectorServer(url, env, mbs);
-      cs.setMBeanServerForwarder(new MBeanServerWrapper(interceptor));
+      cs.setMBeanServerForwarder(new MBeanServerWrapper());
     } else {
       System.setProperty("spring.profiles.active", "pulse.authentication.default");
       cs = JMXConnectorServerFactory.newJMXConnectorServer(url, null, mbs);

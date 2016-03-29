@@ -20,10 +20,10 @@ import com.gemstone.gemfire.distributed.internal.DistributionConfig;
 import com.gemstone.gemfire.internal.ClassLoadUtil;
 import com.gemstone.gemfire.internal.i18n.LocalizedStrings;
 import com.gemstone.gemfire.internal.lang.StringUtils;
+import com.gemstone.gemfire.management.internal.security.ResourceConstants;
 import com.gemstone.gemfire.management.internal.security.ResourceOperationContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.AuthenticationInfo;
 import org.apache.shiro.authc.AuthenticationToken;
@@ -34,7 +34,6 @@ import org.apache.shiro.authz.Permission;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 
-import javax.management.remote.JMXAuthenticator;
 import javax.management.remote.JMXPrincipal;
 import javax.security.auth.Subject;
 import java.lang.reflect.Method;
@@ -47,12 +46,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static com.gemstone.gemfire.management.internal.security.ResourceConstants.ACCESS_DENIED_MESSAGE;
-import static com.gemstone.gemfire.management.internal.security.ResourceConstants.WRONGE_CREDENTIALS_MESSAGE;
 
-public class CustomAuthRealm extends AuthorizingRealm implements JMXAuthenticator {
+public class CustomAuthRealm extends AuthorizingRealm{
   public static final String REALM_NAME = "CUSTOMAUTHREALM";
-  public static final String USER_NAME = "security-username";
-  public static final String PASSWORD = "security-password";
 
   private static final Logger logger = LogManager.getLogger(CustomAuthRealm.class);
   private String authzFactoryName;
@@ -81,8 +77,8 @@ public class CustomAuthRealm extends AuthorizingRealm implements JMXAuthenticato
     String password = new String(authToken.getPassword());
 
     Properties credentialProps = new Properties();
-    credentialProps.put(USER_NAME, username);
-    credentialProps.put(PASSWORD, password);
+    credentialProps.put(ResourceConstants.USER_NAME, username);
+    credentialProps.put(ResourceConstants.PASSWORD, password);
 
     Principal principal  = getAuthenticator(securityProps).authenticate(credentialProps);
 
@@ -103,30 +99,6 @@ public class CustomAuthRealm extends AuthorizingRealm implements JMXAuthenticato
 
     AccessControl accessControl = getAccessControl(principal, false);
     return accessControl.authorizeOperation(null, context);
-  }
-
-
-  @Override
-  public Subject authenticate(Object credentials) {
-    String username = null, password = null;
-    if (credentials instanceof String[]) {
-      final String[] aCredentials = (String[]) credentials;
-      username = aCredentials[0];
-      password = aCredentials[1];
-    } else if (credentials instanceof Properties) {
-      username = ((Properties) credentials).getProperty(USER_NAME);
-      password = ((Properties) credentials).getProperty(PASSWORD);
-    } else {
-      throw new SecurityException(WRONGE_CREDENTIALS_MESSAGE);
-    }
-
-    AuthenticationToken token =
-        new UsernamePasswordToken(username, password);
-    org.apache.shiro.subject.Subject currentUser = SecurityUtils.getSubject();
-    currentUser.login(token);
-
-    // we are not using JMX mechanism to do authentication, therefore, this return value does not matter
-    return null;
   }
 
   public AccessControl getAccessControl(Principal principal, boolean isPost) {

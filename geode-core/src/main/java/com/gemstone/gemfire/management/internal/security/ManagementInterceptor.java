@@ -58,10 +58,6 @@ import static com.gemstone.gemfire.management.internal.security.ResourceConstant
  *
  */
 public class ManagementInterceptor implements JMXAuthenticator {
-
-  // FIXME: Merged from GEODE-17. Are they necessary?
-	public static final String USER_NAME = "security-username";
-	public static final String PASSWORD = "security-password";
 	public static final String OBJECT_NAME_ACCESSCONTROL = "GemFire:service=AccessControl,type=Distributed";
 
 	private static final Logger logger = LogManager.getLogger(ManagementInterceptor.class);
@@ -126,8 +122,8 @@ public class ManagementInterceptor implements JMXAuthenticator {
 			final String[] aCredentials = (String[]) credentials;
 			username = aCredentials[0];
 			password = aCredentials[1];
-		  pr.put(USER_NAME, username);
-		  pr.put(PASSWORD, password);
+		  pr.put(ResourceConstants.USER_NAME, username);
+		  pr.put(ResourceConstants.PASSWORD, password);
     } else if (credentials instanceof Properties) {
       pr = (Properties) credentials;
     } else {
